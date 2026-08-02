@@ -9,10 +9,7 @@ export const sepolia = defineChain({
   nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
   rpcUrls: {
     default: {
-      http: [
-        process.env.NEXT_PUBLIC_L1_RPC_URL ??
-          "https://ethereum-sepolia-rpc.publicnode.com",
-      ],
+      http: ["https://ethereum-sepolia-rpc.publicnode.com"],
     },
   },
   testnet: true,
@@ -24,9 +21,7 @@ export const abstractTestnet = defineChain({
   nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
   rpcUrls: {
     default: {
-      http: [
-        process.env.NEXT_PUBLIC_L2_RPC_URL ?? "https://api.testnet.abs.xyz",
-      ],
+      http: ["https://api.testnet.abs.xyz"],
     },
   },
   testnet: true,
