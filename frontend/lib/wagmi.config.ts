@@ -22,7 +22,7 @@ export const wagmiConfig = getDefaultConfig({
   chains: [sepolia, abstractTestnet],
   ssr: true,
   transports: {
-    // Public stable RPCs — no API key needed for end users
+    // Stable public RPCs — no API key needed for end users
     [sepolia.id]: http("https://rpc2.sepolia.org"),
     [abstractTestnet.id]: http("https://api.testnet.abs.xyz"),
   },
