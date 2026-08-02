@@ -1,0 +1,36 @@
+# Node
+node_modules/
+dist/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Databases
+*.db
+*.db-journal
+backend/prisma/dev.db
+
+# Foundry
+contracts/cache/
+contracts/out/
+contracts/broadcast/
+
+# Vendor libraries (cloned on demand — see README)
+contracts/lib/
+
+# Logs & OS
+*.log
+.DS_Store
+.turbo/
+
+# Vercel
+.vercel/
+
+# Local anvil data
+anvil_*.json

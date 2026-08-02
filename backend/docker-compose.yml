@@ -1,0 +1,44 @@
+version: "3.9"
+
+# Standalone backend stack: relayer API + Postgres.
+# For the full stack (including the frontend) use the root docker-compose.yml.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: nexbridge
+      POSTGRES_PASSWORD: nexbridge
+      POSTGRES_DB: nexbridge
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexbridge"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://nexbridge:nexbridge@postgres:5432/nexbridge
+      PORT: 8080
+      RELAYER_PRIVATE_KEY: ${RELAYER_PRIVATE_KEY:?set RELAYER_PRIVATE_KEY}
+      L1_RPC_URL: ${L1_RPC_URL}
+      L1_WS_URL: ${L1_WS_URL}
+      L1_VAULT_ADDRESS: ${L1_VAULT_ADDRESS}
+      L2_RPC_URL: ${L2_RPC_URL}
+      L2_WS_URL: ${L2_WS_URL}
+      L2_VAULT_ADDRESS: ${L2_VAULT_ADDRESS}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+volumes:
+  pgdata:

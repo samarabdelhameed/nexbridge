@@ -1,0 +1,17 @@
+{
+  "name": "nexbridge",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lock-and-release cross-chain ETH bridge (Sepolia ⇄ Abstract Testnet) — contracts + relayer backend + Next.js frontend",
+  "scripts": {
+    "dev": "bash scripts/local.sh start",
+    "start": "bash scripts/local.sh start",
+    "stop": "bash scripts/local.sh stop",
+    "status": "bash scripts/local.sh status",
+    "test": "bash scripts/test.sh",
+    "test:integration": "npm run test:integration --prefix backend"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

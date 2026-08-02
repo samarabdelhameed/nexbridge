@@ -1,0 +1,32 @@
+// SQLite schema — used for local development and automated tests so the backend
+// can run without a Postgres instance. The models are identical to the
+// PostgreSQL schema (schema.postgres.prisma); only the provider differs.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model BridgeTransaction {
+  id           String   @id @default(cuid())
+  userAddress  String
+  direction    String // "L1_TO_L2" | "L2_TO_L1"
+  amount       Decimal // raw wei, Decimal for precision
+  amountHuman  String // human readable "1.2345"
+  sourceChain  String
+  destChain    String
+  sourceTxHash String   @unique
+  destTxHash   String?
+  nonce        String
+  status       String // PENDING | CONFIRMED | RELEASING | RELEASED | FAILED
+  attempts     Int      @default(0)
+  errorMessage String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userAddress, status])
+  @@index([status, createdAt])
+}

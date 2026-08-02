@@ -1,0 +1,61 @@
+version: "3.9"
+
+# Full NexBridge stack: Postgres + relayer backend + frontend.
+# Set the required env vars (copy .env.example values from each service) and run:
+#   docker compose up --build
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: nexbridge
+      POSTGRES_PASSWORD: nexbridge
+      POSTGRES_DB: nexbridge
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexbridge"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://nexbridge:nexbridge@postgres:5432/nexbridge
+      PORT: 8080
+      HOST: 0.0.0.0
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      RELAYER_PRIVATE_KEY: ${RELAYER_PRIVATE_KEY:?RELAYER_PRIVATE_KEY is required}
+      L1_RPC_URL: ${L1_RPC_URL:?L1_RPC_URL is required}
+      L1_WS_URL: ${L1_WS_URL:-}
+      L1_VAULT_ADDRESS: ${L1_VAULT_ADDRESS:?L1_VAULT_ADDRESS is required}
+      L1_CHAIN_ID: ${L1_CHAIN_ID:-11155111}
+      L1_CONFIRMATIONS: ${L1_CONFIRMATIONS:-2}
+      L2_RPC_URL: ${L2_RPC_URL:?L2_RPC_URL is required}
+      L2_WS_URL: ${L2_WS_URL:-}
+      L2_VAULT_ADDRESS: ${L2_VAULT_ADDRESS:?L2_VAULT_ADDRESS is required}
+      L2_CHAIN_ID: ${L2_CHAIN_ID:-11124}
+      L2_CONFIRMATIONS: ${L2_CONFIRMATIONS:-2}
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_BACKEND_URL: http://localhost:8080
+      NEXT_PUBLIC_L1_VAULT_ADDRESS: ${L1_VAULT_ADDRESS}
+      NEXT_PUBLIC_L2_VAULT_ADDRESS: ${L2_VAULT_ADDRESS}
+      NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: ${NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID:-}
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+volumes:
+  pgdata:
