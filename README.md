@@ -9,7 +9,7 @@
 
 > Reference concept: Abstract's native bridge. Rebuilt from scratch with original code, architecture, and a fully custom UI/UX. A testnet demo — **not for real value**.
 
-> **🟢 Live demo (Vercel):** https://nexbridge-jus4z1ydz-samarabdelhameeds-projects-df99c328.vercel.app
+> **🟢 Live demo (Vercel):** https://nexbridge-iota.vercel.app
 > The vaults run on **real testnets** (Sepolia + Abstract Testnet at `0x0bdccc047f288456dd7933026e5ff5a4bb49f4d1` on both). The backend relayer + API run locally on :8080, so the live link works while that machine is online.
 
 ---
