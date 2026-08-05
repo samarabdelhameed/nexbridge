@@ -111,7 +111,14 @@ export const vaultAbi = [
   },
 ] as const;
 
-export const L1_VAULT_ADDRESS =
-  process.env.NEXT_PUBLIC_L1_VAULT_ADDRESS as Address | undefined;
-export const L2_VAULT_ADDRESS =
-  process.env.NEXT_PUBLIC_L2_VAULT_ADDRESS as Address | undefined;
+// Real testnet deployments (same CREATE address on both chains from the same
+// deployer key + nonce 0). Hardcoded as defaults so the app works out of the box;
+// overridable via NEXT_PUBLIC_L1_VAULT_ADDRESS / NEXT_PUBLIC_L2_VAULT_ADDRESS.
+const DEPLOYED_VAULT = "0x0bdccc047f288456dd7933026e5ff5a4bb49f4d1";
+
+export const L1_VAULT_ADDRESS = (
+  process.env.NEXT_PUBLIC_L1_VAULT_ADDRESS as Address | undefined
+) ?? DEPLOYED_VAULT;
+export const L2_VAULT_ADDRESS = (
+  process.env.NEXT_PUBLIC_L2_VAULT_ADDRESS as Address | undefined
+) ?? DEPLOYED_VAULT;

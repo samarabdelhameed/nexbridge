@@ -1,5 +1,5 @@
 import {
-  watchContractEvent,
+  getContractEvents,
   getTransactionReceipt,
   getBlockNumber,
 } from "viem/actions";
@@ -168,8 +168,12 @@ export async function handleDeposit(
 }
 
 /**
- * Start listening for Deposited events on a chain. Uses the WebSocket transport
- * when configured, otherwise falls back to HTTP polling (also what anvil uses).
+ * Start listening for Deposited events on a chain.
+ *
+ * Uses a manual `eth_getLogs` poll loop with a local block cursor instead of
+ * `watchContractEvent`, because ZKsync-family RPCs (e.g. Abstract) drop the
+ * persistent filters that `watchContractEvent(poll: true)` relies on
+ * (`Filter not found`). `eth_getLogs` with small ranges works on both.
  */
 export function startChainListener(chain: ChainConfig): () => void {
   if (!chain.vaultAddress) {
@@ -183,24 +187,48 @@ export function startChainListener(chain: ChainConfig): () => void {
     "starting deposit listener",
   );
 
-  // Poll for new Deposited logs. When a WebSocket RPC is configured the poller
-  // runs over the WebSocket connection; otherwise it falls back to HTTP.
-  const unwatch = watchContractEvent(client, {
-    address: chain.vaultAddress,
-    abi: vaultAbi,
-    eventName: "Deposited",
-    poll: true,
-    pollingInterval: Number(process.env.POLL_INTERVAL_MS ?? "2000"),
-    onLogs: (logs) => {
-      for (const log of logs) {
-        void handleDeposit(chain, log);
+  let lastBlock = 0n;
+  let running = true;
+
+  const poll = async (): Promise<void> => {
+    if (!running) return;
+    try {
+      const head = await getBlockNumber(client);
+      if (lastBlock === 0n) {
+        // Backfill only from the current head so we don't replay history.
+        lastBlock = head > 1n ? head - 1n : 0n;
       }
-    },
-    onError: (err) => logger.error({ chain: chain.label, err: err.message }, "listener error"),
-  });
+      if (head <= lastBlock) return;
+
+      const logs = await getContractEvents(client, {
+        address: chain.vaultAddress,
+        abi: vaultAbi,
+        eventName: "Deposited",
+        fromBlock: lastBlock + 1n,
+        toBlock: head,
+      });
+
+      for (const log of logs) {
+        void handleDeposit(chain, log as Log);
+      }
+      lastBlock = head;
+    } catch (err) {
+      logger.error(
+        { chain: chain.label, err: err instanceof Error ? err.message : String(err) },
+        "listener poll error",
+      );
+    }
+  };
+
+  void poll();
+  const interval = setInterval(
+    () => void poll(),
+    Number(process.env.POLL_INTERVAL_MS ?? "2000"),
+  );
 
   return () => {
+    running = false;
+    clearInterval(interval);
     logger.info({ chain: chain.label }, "stopping listener");
-    unwatch();
   };
 }
